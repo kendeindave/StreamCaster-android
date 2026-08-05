@@ -38,13 +38,6 @@ class Camera2CapabilityQuery @Inject constructor(
         context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
     }
 
-    private val standardResolutions = listOf(
-        Resolution(1920, 1080),
-        Resolution(1280, 720),
-        Resolution(854, 480),
-        Resolution(640, 360)
-    )
-
     private val standardFpsValues = listOf(24, 25, 30, 60)
 
     // -----------------------------------------------------------------------
@@ -116,16 +109,17 @@ class Camera2CapabilityQuery @Inject constructor(
 
         val encoderCaps = findEncoderCapabilities(codec)
 
-        return standardResolutions.filter { resolution ->
-            val cameraSupports = cameraSizes.any { size ->
-                size.width == resolution.width && size.height == resolution.height
+        // Lista dinámica: cada tamaño que la cámara pueda entregar Y el encoder
+        // pueda codificar, normalizado a horizontal, de 360p a 4K, de mayor a menor.
+        return cameraSizes
+            .map { Resolution(maxOf(it.width, it.height), minOf(it.width, it.height)) }
+            .distinct()
+            .filter { res ->
+                val encoderSupports = encoderCaps?.videoCapabilities
+                    ?.isSizeSupported(res.width, res.height) ?: true
+                encoderSupports && res.height >= 360 && res.width <= 3840
             }
-            val encoderSupports = encoderCaps?.let { caps ->
-                caps.videoCapabilities.isSizeSupported(resolution.width, resolution.height)
-            } ?: true
-
-            cameraSupports && encoderSupports
-        }
+            .sortedByDescending { it.width.toLong() * it.height.toLong() }
     }
 
     override fun getSupportedFps(cameraId: String, resolution: Resolution, codec: VideoCodec): List<Int> {
