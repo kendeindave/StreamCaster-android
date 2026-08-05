@@ -52,6 +52,12 @@ jobs:
       - name: Build FOSS and GMS debug APKs
         run: ./gradlew assembleFossDebug assembleGmsDebug
 
+      - name: Upload FOSS debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: streamcaster-foss-debug
+          path: app/build/outputs/apk/foss/debug/app-foss-debug.apk
+
       # ── 6. Run unit tests against the FOSS flavor ──
       - name: Run FOSS unit tests
         run: ./gradlew testFossDebugUnitTest
