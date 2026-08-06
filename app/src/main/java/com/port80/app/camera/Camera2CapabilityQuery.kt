@@ -109,10 +109,21 @@ class Camera2CapabilityQuery @Inject constructor(
 
         val encoderCaps = findEncoderCapabilities(codec)
 
-        // Lista dinámica: cada tamaño que la cámara pueda entregar Y el encoder
-        // pueda codificar, normalizado a horizontal, de 360p a 4K, de mayor a menor.
-        return cameraSizes
-            .map { Resolution(maxOf(it.width, it.height), minOf(it.width, it.height)) }
+        // Tamaños nativos de la cámara (normalizados a horizontal).
+        val native = cameraSizes.map {
+            Resolution(maxOf(it.width, it.height), minOf(it.width, it.height))
+        }
+
+        // Recortes 16:9 a partir del ancho nativo (ej. 1440x1080 -> 1440x810).
+        // RootEncoder recorta el sensor (AspectRatioMode.Fill): panorámico real,
+        // ancho completo, sin distorsión.
+        val widescreen = native.map { res ->
+            var h = res.width * 9 / 16
+            if (h % 2 != 0) h -= 1            // los encoders exigen dimensiones pares
+            Resolution(res.width, h)
+        }
+
+        return (native + widescreen)
             .distinct()
             .filter { res ->
                 val encoderSupports = encoderCaps?.videoCapabilities
