@@ -47,7 +47,8 @@ fun CameraPreview(
             // Fill the surface, cropping edges rather than letterboxing with black bars.
             // Camera sensors always produce landscape-native frames; Fill crops to fit
             // portrait surfaces without black bars.
-            openGlView.setAspectRatioMode(AspectRatioMode.Fill)
+            //openGlView.setAspectRatioMode(AspectRatioMode.Fill)
+            openGlView.setAspectRatioMode(AspectRatioMode.Adjust)
             openGlView.holder.addCallback(object : SurfaceHolder.Callback {
                 override fun surfaceCreated(holder: SurfaceHolder) {
                     // Pass the OpenGlView itself (not just the holder) so RtmpCamera2
